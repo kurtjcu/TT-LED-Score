@@ -88,19 +88,19 @@ void loop()
 
   digitalWrite(latch, LOW);
   shiftOut(data, clk, whichDigit[1]); // led
-  shiftOut(data, clk, numTable[1]);   // number
+  shiftOut(data, clk, numTable[2]);   // number
   digitalWrite(latch, HIGH);
   delay(DELAY);
 
   digitalWrite(latch, LOW);
   shiftOut(data, clk, whichDigit[2]); // led
-  shiftOut(data, clk, numTable[2]);   // number
+  shiftOut(data, clk, numTable[3]);   // number
   digitalWrite(latch, HIGH);
   delay(DELAY);
 
   digitalWrite(latch, LOW);
   shiftOut(data, clk, whichDigit[3]); // led
-  shiftOut(data, clk, numTable[2]);   // number
+  shiftOut(data, clk, numTable[4]);   // number
   digitalWrite(latch, HIGH);
   delay(DELAY);
 }
