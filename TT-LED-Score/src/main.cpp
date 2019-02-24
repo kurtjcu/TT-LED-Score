@@ -5,27 +5,27 @@ int latch = D8;
 // int clk = D5;
 // int data = D7;
 
-// #define DELAY 2
+#define DELAY 4
 
 // void shiftOut(int mydataPin, int myClockPin, byte mydataOut);
 
-// //This is the hex value of each number stored in an array by index num
-// const byte numTable[] =
-//     {
-//         B01111110, //0
-//         B00010010, //1
-//         B10111100, //2
-//         B10110110, //3
-//         B11010010, //4
-//         B11100110, //5
-//         B11101110, //6
-//         B01110010, //7
-//         B11111110, //8
-//         B11110010, //9
-//         B00000000  //clear
+//This is the hex value of each number stored in an array by index num
+const byte numTable[] =
+    {
+        B01111110, //0
+        B00010010, //1
+        B10111100, //2
+        B10110110, //3
+        B11010010, //4
+        B11100110, //5
+        B11101110, //6
+        B01110010, //7
+        B11111110, //8
+        B11110010, //9
+        B00000000  //clear
 
-// };
-// byte whichDigit[4] = {B11110111, B11111011, B11111101, B11111110};
+};
+byte whichDigit[4] = {B11110111, B11111011, B11111101, B11111110};
 
 // int i;
 
@@ -166,12 +166,38 @@ void setup()
 void loop()
 {
 
-  for (int i = 0; i <= 8; i++)
-  {
+  // for (int i = 0; i <= 256; i++)
+  // {
 
-    digitalWrite(latch, LOW);  //Disable any internal transference in the SN74HC595
-    SPI.transfer(i);           //Transfer data to the SN74HC595 nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
-    digitalWrite(latch, HIGH); //Start the internal data transference in the SN74HC595
-    delay(1000);               //Wait for next iteration
-  }
+  //   digitalWrite(latch, LOW);    //Disable any internal transference in the SN74HC595
+  //   SPI.transfer(whichDigit[0]); //Transfer data to the SN74HC595
+  //   SPI.transfer(numTable[1]);   //Transfer data to the SN74HC595
+
+  //   digitalWrite(latch, HIGH); //Start the internal data transference in the SN74HC595
+  //   delay(1000);               //Wait for next iteration
+  // }
+
+  digitalWrite(latch, LOW);
+  SPI.transfer(whichDigit[0]); // led
+  SPI.transfer(numTable[9]);   // number
+  digitalWrite(latch, HIGH);
+  delay(DELAY);
+
+  digitalWrite(latch, LOW);
+  SPI.transfer(whichDigit[1]); // led
+  SPI.transfer(numTable[8]);   // number
+  digitalWrite(latch, HIGH);
+  delay(DELAY);
+
+  digitalWrite(latch, LOW);
+  SPI.transfer(whichDigit[2]); // led
+  SPI.transfer(numTable[7]);   // number
+  digitalWrite(latch, HIGH);
+  delay(DELAY);
+
+  digitalWrite(latch, LOW);
+  SPI.transfer(whichDigit[3]); // led
+  SPI.transfer(numTable[6]);   // number
+  digitalWrite(latch, HIGH);
+  delay(DELAY);
 }
