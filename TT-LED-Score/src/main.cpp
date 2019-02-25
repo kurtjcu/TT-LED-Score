@@ -1,13 +1,15 @@
 #include <Arduino.h>
-// #include <SPI.h>
+#include <SPI.h>
 
 int latch = D8;
-int clk = D5;
-int data = D7;
+// int clk = D5;
+// int data = D7;
+int p1Push = D1;
+int p2Push = D4;
+int clearPush1 = D2;
+int clearPush2 = D3;
 
-#define DELAY 2
-
-void shiftOut(int mydataPin, int myClockPin, byte mydataOut);
+#define DELAY 4
 
 //This is the hex value of each number stored in an array by index num
 const byte numTable[] =
@@ -25,133 +27,204 @@ const byte numTable[] =
         B00000000  //clear
 
 };
-byte whichDigit[4] = {B11110111, B11111011, B11111101, B11111110};
+//set the led panel we are writing to
+const byte whichDigit[4] = {B11110111, B11111011, B11111101, B11111110};
 
-int i;
+const uint16_t p1Tens[] =
+    {
+        whichDigit[1] * 256 + numTable[0],
+        whichDigit[1] * 256 + numTable[1],
+        whichDigit[1] * 256 + numTable[2],
+        whichDigit[1] * 256 + numTable[3],
+        whichDigit[1] * 256 + numTable[4],
+        whichDigit[1] * 256 + numTable[5],
+        whichDigit[1] * 256 + numTable[6],
+        whichDigit[1] * 256 + numTable[7],
+        whichDigit[1] * 256 + numTable[8],
+        whichDigit[1] * 256 + numTable[9],
+        whichDigit[1] * 256 + numTable[10]};
+
+const uint16_t p1Units[] =
+    {
+        whichDigit[0] * 256 + numTable[0],
+        whichDigit[0] * 256 + numTable[1],
+        whichDigit[0] * 256 + numTable[2],
+        whichDigit[0] * 256 + numTable[3],
+        whichDigit[0] * 256 + numTable[4],
+        whichDigit[0] * 256 + numTable[5],
+        whichDigit[0] * 256 + numTable[6],
+        whichDigit[0] * 256 + numTable[7],
+        whichDigit[0] * 256 + numTable[8],
+        whichDigit[0] * 256 + numTable[9],
+        whichDigit[0] * 256 + numTable[10]};
+const uint16_t p2Tens[] =
+    {
+        whichDigit[3] * 256 + numTable[0],
+        whichDigit[3] * 256 + numTable[1],
+        whichDigit[3] * 256 + numTable[2],
+        whichDigit[3] * 256 + numTable[3],
+        whichDigit[3] * 256 + numTable[4],
+        whichDigit[3] * 256 + numTable[5],
+        whichDigit[3] * 256 + numTable[6],
+        whichDigit[3] * 256 + numTable[7],
+        whichDigit[3] * 256 + numTable[8],
+        whichDigit[3] * 256 + numTable[9],
+        whichDigit[3] * 256 + numTable[10]};
+
+const uint16_t p2Units[] =
+    {
+        whichDigit[2] * 256 + numTable[0],
+        whichDigit[2] * 256 + numTable[1],
+        whichDigit[2] * 256 + numTable[2],
+        whichDigit[2] * 256 + numTable[3],
+        whichDigit[2] * 256 + numTable[4],
+        whichDigit[2] * 256 + numTable[5],
+        whichDigit[2] * 256 + numTable[6],
+        whichDigit[2] * 256 + numTable[7],
+        whichDigit[2] * 256 + numTable[8],
+        whichDigit[2] * 256 + numTable[9],
+        whichDigit[2] * 256 + numTable[10]};
+
+uint8_t p1Score[2] = {10, 10}; // P1Tens, P1Units
+uint8_t p2Score[2] = {10, 10}; // P1Tens, P1Units,
+
+void incScore(uint8_t player[]);
+void clearScores();
 
 void setup()
 {
-  // SPI.begin();
   pinMode(latch, OUTPUT);
-  pinMode(clk, OUTPUT);
-  pinMode(data, OUTPUT);
+  pinMode(p1Push, INPUT_PULLUP);
+  pinMode(p2Push, INPUT_PULLUP);
+  pinMode(clearPush1, INPUT_PULLUP);
+  pinMode(clearPush2, INPUT_PULLUP);
+  SPI.begin();
+  clearScores();
 }
 
 void loop()
 {
-
-  //  for(int i=0; i<4; i++){
-  //    for(int j=0; j<10; j++){
-  //      digitalWrite(latch, LOW);
-  //      shiftOut(data, clk, whichDigit[i]); // digitOne
-  //      shiftOut(data, clk, numTable[j]); // digitTwo
-  //      digitalWrite(latch, HIGH);
-  //      delay(500);
-  //    }
-  //  }
-
-  //  digitalWrite(latch, LOW);
-  //  shiftOut(data, clk, B11111110); // led
-  //  shiftOut(data, clk, B11101110); // number
-  //  digitalWrite(latch, HIGH);
-  //  delay(10);
-
-  // digitalWrite(latch, LOW);
-  // SPI.transfer(whichDigit[0]); // led
-  // // SPI.transfer(numTable[9]);   // number
-  // digitalWrite(latch, HIGH);
-  // delay(DELAY);
-
-  // digitalWrite(latch, LOW);
-  // SPI.transfer(whichDigit[1]); // led
-  // // SPI.transfer(numTable[8]);   // number
-  // digitalWrite(latch, HIGH);
-  // delay(DELAY);
-
-  // digitalWrite(latch, LOW);
-  // SPI.transfer(whichDigit[2]); // led
-  // // SPI.transfer(numTable[7]);   // number
-  // digitalWrite(latch, HIGH);
-  // delay(DELAY);
-
-  // digitalWrite(latch, LOW);
-  // SPI.transfer(whichDigit[3]); // led
-  // // SPI.transfer(numTable[6]);   // number
-  // digitalWrite(latch, HIGH);
-  // delay(DELAY);
-
   digitalWrite(latch, LOW);
-  shiftOut(data, clk, whichDigit[0]); // led
-  shiftOut(data, clk, numTable[1]);   // number
+  SPI.transfer16(p1Tens[p1Score[0]]); // led
   digitalWrite(latch, HIGH);
   delay(DELAY);
 
   digitalWrite(latch, LOW);
-  shiftOut(data, clk, whichDigit[1]); // led
-  shiftOut(data, clk, numTable[2]);   // number
+  SPI.transfer16(p1Units[p1Score[1]]); // led
   digitalWrite(latch, HIGH);
   delay(DELAY);
 
   digitalWrite(latch, LOW);
-  shiftOut(data, clk, whichDigit[2]); // led
-  shiftOut(data, clk, numTable[3]);   // number
+  SPI.transfer16(p2Tens[p2Score[0]]); // led
   digitalWrite(latch, HIGH);
   delay(DELAY);
 
   digitalWrite(latch, LOW);
-  shiftOut(data, clk, whichDigit[3]); // led
-  shiftOut(data, clk, numTable[4]);   // number
+  SPI.transfer16(p2Units[p2Score[1]]); // led
   digitalWrite(latch, HIGH);
   delay(DELAY);
-}
 
-// the heart of the program
-void shiftOut(int mydataPin, int myClockPin, byte mydataOut)
-{
-  // This shifts 8 bits out MSB first,
-  //on the rising edge of the clock,
-  //clock idles low
+  //check buttons
+  int p1Pushed = 0;
+  int p2Pushed = 0;
+  int clearPushed = 0;
+  p1Pushed = !digitalRead(p1Push);
+  p2Pushed = !digitalRead(p2Push);
+  int tempClear1 = !digitalRead(clearPush1);
+  int tempClear2 = !digitalRead(clearPush2);
 
-  //internal function setup
-  int i = 0;
-  int pinState;
-  //  pinMode(myClockPin, OUTPUT);
-  //  pinMode(mydataPin, OUTPUT);
-
-  //clear everything out just in case to
-  //prepare shift register for bit shifting
-  digitalWrite(mydataPin, 0);
-  digitalWrite(myClockPin, 0);
-
-  //for each bit in the byte mydataOut�
-  //NOTICE THAT WE ARE COUNTING DOWN in our for loop
-  //This means that %00000001 or "1" will go through such
-  //that it will be pin Q0 that lights.
-  for (i = 7; i >= 0; i--)
+  if (tempClear1 || tempClear2)
   {
-    digitalWrite(myClockPin, 0);
-
-    //if the value passed to mydataOut and a bitmask result
-    // true then... so if we are at i=6 and our value is
-    // %11010100 it would the code compares it to %01000000
-    // and proceeds to set pinState to 1.
-    if (mydataOut & (1 << i))
-    {
-      pinState = 1;
-    }
-    else
-    {
-      pinState = 0;
-    }
-
-    //Sets the pin to HIGH or LOW depending on pinState
-    digitalWrite(mydataPin, pinState);
-    //register shifts bits on upstroke of clock pin
-    digitalWrite(myClockPin, 1);
-    //zero the data pin after shift to prevent bleed through
-    digitalWrite(mydataPin, 0);
+    clearPushed = 1;
+  }
+  else
+  {
+    clearPushed = 0;
   }
 
-  //stop shifting
-  digitalWrite(myClockPin, 0);
+  //do something if buttons have abeen pushed
+  if (p1Pushed || p2Pushed || clearPushed)
+  {
+
+    if (p1Pushed)
+    {
+      incScore(p1Score);
+    }
+    else if (p2Pushed)
+    {
+      incScore(p2Score);
+    }
+    else if (clearPushed)
+    {
+      clearScores();
+    }
+
+    for (int i = 0; i < 20; i++) // clear display for a second(ish)
+    {
+      digitalWrite(latch, LOW);
+      SPI.transfer16(p1Tens[10]); // led
+      digitalWrite(latch, HIGH);
+      delay(DELAY);
+
+      digitalWrite(latch, LOW);
+      SPI.transfer16(p1Units[10]); // led
+      digitalWrite(latch, HIGH);
+      delay(DELAY);
+
+      digitalWrite(latch, LOW);
+      SPI.transfer16(p2Tens[10]); // led
+      digitalWrite(latch, HIGH);
+      delay(DELAY);
+
+      digitalWrite(latch, LOW);
+      SPI.transfer16(p2Units[10]); // led
+      digitalWrite(latch, HIGH);
+      delay(DELAY);
+    }
+  }
+
+  // for (int i = 0; i < 10; i++)
+  // {
+
+  //   digitalWrite(latch, LOW);
+  //   SPI.transfer16(p1Units[i]); // led
+  //   digitalWrite(latch, HIGH);
+  //   delay(DELAY);
+
+  //   digitalWrite(latch, LOW);
+  //   SPI.transfer16(p1Tens[i]); // led
+  //   digitalWrite(latch, HIGH);
+  //   delay(DELAY);
+
+  //   digitalWrite(latch, LOW);
+  //   SPI.transfer16(p2Units[i]); // led
+  //   digitalWrite(latch, HIGH);
+  //   delay(DELAY);
+
+  //   digitalWrite(latch, LOW);
+  //   SPI.transfer16(p2Tens[i]); // led
+  //   digitalWrite(latch, HIGH);
+  //   delay(DELAY);
+  // }
+}
+
+void incScore(uint8_t player[])
+{
+  if (player[0] == 9)
+  {
+    player[1]++;
+    player[0] = 0;
+  }
+  else
+  {
+    player[0]++;
+  }
+}
+
+void clearScores()
+{
+  p1Score[0] = 0;
+  p1Score[1] = 0;
+  p2Score[0] = 0;
+  p2Score[1] = 0;
 }
