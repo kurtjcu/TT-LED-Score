@@ -5,8 +5,9 @@ int latch = D8;
 // int clk = D5;
 // int data = D7;
 int p1Push = D1;
-int p2Push = D2;
-int clearPush = D3;
+int p2Push = D4;
+int clearPush1 = D2;
+int clearPush2 = D3;
 
 #define DELAY 4
 
@@ -29,7 +30,7 @@ const byte numTable[] =
 //set the led panel we are writing to
 const byte whichDigit[4] = {B11110111, B11111011, B11111101, B11111110};
 
-const uint16_t p1Units[] =
+const uint16_t p1Tens[] =
     {
         whichDigit[1] * 256 + numTable[0],
         whichDigit[1] * 256 + numTable[1],
@@ -43,7 +44,7 @@ const uint16_t p1Units[] =
         whichDigit[1] * 256 + numTable[9],
         whichDigit[1] * 256 + numTable[10]};
 
-const uint16_t p1Tens[] =
+const uint16_t p1Units[] =
     {
         whichDigit[0] * 256 + numTable[0],
         whichDigit[0] * 256 + numTable[1],
@@ -56,7 +57,7 @@ const uint16_t p1Tens[] =
         whichDigit[0] * 256 + numTable[8],
         whichDigit[0] * 256 + numTable[9],
         whichDigit[0] * 256 + numTable[10]};
-const uint16_t p2Units[] =
+const uint16_t p2Tens[] =
     {
         whichDigit[3] * 256 + numTable[0],
         whichDigit[3] * 256 + numTable[1],
@@ -70,7 +71,7 @@ const uint16_t p2Units[] =
         whichDigit[3] * 256 + numTable[9],
         whichDigit[3] * 256 + numTable[10]};
 
-const uint16_t p2Tens[] =
+const uint16_t p2Units[] =
     {
         whichDigit[2] * 256 + numTable[0],
         whichDigit[2] * 256 + numTable[1],
@@ -93,9 +94,10 @@ void clearScores();
 void setup()
 {
   pinMode(latch, OUTPUT);
-  pinMode(p1Push, INPUT);
-  pinMode(p2Push, INPUT);
-  pinMode(clearPush, INPUT);
+  pinMode(p1Push, INPUT_PULLUP);
+  pinMode(p2Push, INPUT_PULLUP);
+  pinMode(clearPush1, INPUT_PULLUP);
+  pinMode(clearPush2, INPUT_PULLUP);
   SPI.begin();
   clearScores();
 }
@@ -126,27 +128,38 @@ void loop()
   int p1Pushed = 0;
   int p2Pushed = 0;
   int clearPushed = 0;
-  p1Pushed = digitalRead(p1Push);
-  p2Pushed = digitalRead(p2Push);
-  clearPushed = digitalRead(clearPush);
+  p1Pushed = !digitalRead(p1Push);
+  p2Pushed = !digitalRead(p2Push);
+  int tempClear1 = !digitalRead(clearPush1);
+  int tempClear2 = !digitalRead(clearPush2);
+
+  if (tempClear1 || tempClear2)
+  {
+    clearPushed = 1;
+  }
+  else
+  {
+    clearPushed = 0;
+  }
 
   //do something if buttons have abeen pushed
   if (p1Pushed || p2Pushed || clearPushed)
   {
-    if (p1Push)
+
+    if (p1Pushed)
     {
       incScore(p1Score);
     }
-    else if (p2Push)
+    else if (p2Pushed)
     {
       incScore(p2Score);
     }
-    else
+    else if (clearPushed)
     {
       clearScores();
     }
 
-    for (int i = 0; i < 100; i++) // clear display for a second(ish)
+    for (int i = 0; i < 20; i++) // clear display for a second(ish)
     {
       digitalWrite(latch, LOW);
       SPI.transfer16(p1Tens[10]); // led
@@ -197,7 +210,7 @@ void loop()
 
 void incScore(uint8_t player[])
 {
-  if (player[0] = 9)
+  if (player[0] == 9)
   {
     player[1]++;
     player[0] = 0;
